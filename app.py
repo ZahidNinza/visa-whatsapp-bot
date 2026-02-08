@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 
@@ -7,18 +8,18 @@ from googleapiclient.discovery import build
 
 # ===================== CONFIG =====================
 FOLDER_ID = "10wywy_btpezgQMadex40mIehu-1I-bDo"
-
-# ✅ yaha apni JSON file ka exact naam rakho
-SERVICE_ACCOUNT_FILE = "visa-whatsapp-bot-1c44f4d4505f.json"
 # ==================================================
 
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 app = Flask(__name__)
 
-# ---- Google Drive client ----
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE,
+# ---- Google Drive client (from ENV JSON) ----
+# Render environment variable: GOOGLE_SERVICE_ACCOUNT_JSON
+service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
+
+credentials = service_account.Credentials.from_service_account_info(
+    service_account_info,
     scopes=SCOPES
 )
 
@@ -77,5 +78,6 @@ def whatsapp_webhook():
 
 
 if __name__ == "__main__":
-    # Local run
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Local run only (Render will use gunicorn)
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=True)
